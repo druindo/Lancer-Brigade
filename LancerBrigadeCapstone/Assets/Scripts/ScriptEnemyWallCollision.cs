@@ -2,9 +2,13 @@
 using System.Collections;
 
 public class ScriptEnemyWallCollision : MonoBehaviour {
+    [Tooltip("This enemy's detection script.")]
     public ScriptDetectionRadius detect;
+    [Tooltip("This enemy's movement script.")]
     public ScriptEnemyMovement eMove;
+    [Tooltip("LayerMask; holds the value of the layerMask for walls.")]
     public LayerMask wallMask = 8;
+    [Tooltip("Is this enemy close to or colliding with a wall?")]
     public bool isWallCollision = false;
 
 

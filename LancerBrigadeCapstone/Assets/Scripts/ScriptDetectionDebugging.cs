@@ -2,9 +2,11 @@
 using System.Collections;
 
 public class ScriptDetectionDebugging : MonoBehaviour {
-
+    [Tooltip("The attack sphere of this enemy.")]
     public SphereCollider attackSphere;
+    [Tooltip("The detection sphere of this enemy.")]
     public SphereCollider detectSphere;
+    [Tooltip("The sphere used to keep enemies from bumping into each other. Not Implemented.")]
     public SphereCollider separationSphere;
 
     // Use this for initialization

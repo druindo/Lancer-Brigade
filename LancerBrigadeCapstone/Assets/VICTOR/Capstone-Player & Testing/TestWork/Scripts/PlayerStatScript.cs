@@ -40,9 +40,11 @@ public class PlayerStatScript : MonoBehaviour {
     void DeathFunction()
     {
         //death script
+        Debug.Log("Player Died");
     }
 
-    void TakeDamage(float dmg)
+    //minor change here for testing my code; Jason
+    public void TakeDamage(float dmg)
     {
         Health -= dmg;
     }

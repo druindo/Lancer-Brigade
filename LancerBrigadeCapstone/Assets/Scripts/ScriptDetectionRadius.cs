@@ -3,21 +3,43 @@ using System.Collections;
 
 public class ScriptDetectionRadius : MonoBehaviour
 {
+    [Tooltip("The gameObject parent of this script.")]
     public GameObject thisParent;
+    [Tooltip("This enemy's class script.")]
     public ScriptEnemyClass scriptThing;
 
+    [Tooltip("The targeted player; set whenever the player \"Enters\" (read: Collides with) this enemy's detection sphere.")]
     public Transform thePlayer;
+    [Tooltip("This enemy's movement script.")]
     public ScriptEnemyMovement eMove;
+    [Tooltip("Is this enemy detecting a player?")]
     public bool isDetecting = false;
+    [Tooltip("SphereCollider; this enemy's detection sphere.")]
     public SphereCollider detectSphere;
+    [Tooltip("Has this script run it's Awake function at least once?")]
     public bool firstAwake = true;
+    [Tooltip("Holds the collider of the detected player for use by other scripts.")]
     public Collider colliderHolder;
+    [Tooltip("This enemy's rotation script.")]
+    public ScriptEnemyRotation rotate;
+    [Tooltip("Used by other scripts to determine whether or not the player is within the detection radius.")]
+    public bool isColliding = false; //this is used to avoid on trigger stay
     //public AttackScript attackThing;
 
     void Awake()
     {
         firstAwake = true;
 
+    }
+
+    void OnEnable()
+    {
+        Debug.Log("detectEnabled");
+        if(isColliding)
+        {
+            eMove.enabled = true;
+            //Debug.Log("postattack scriptenemymovement isMoving" + gameObject.GetComponentInParent<ScriptEnemyMovement>().isMovementRunning);
+        }
     }
 
     // Use this for initialization
@@ -65,7 +87,9 @@ public class ScriptDetectionRadius : MonoBehaviour
                     colliderHolder = other;
                     eMove.isMovementRunning = true;
                     eMove.enabled = true;
+                    isColliding = true;
                     Debug.Log(eMove.firstAwake);
+                    //eMove.StartCoroutine("EnemyRotation");
                     //eMove.hasRun = true;
 
                 }
@@ -90,7 +114,10 @@ public class ScriptDetectionRadius : MonoBehaviour
             Debug.Log("I don't see a player anymore.");
             eMove.fracJourney = 0;
             eMove.currentLerpTime = 0;
+            //eMove.StopCoroutine("EnemyRotation");
             eMove.enabled = false;
+            rotate.enabled = false;
+            isColliding = false;
             //            if(eMove.isLerping)
             //            {
             //				isDetecting = false;
@@ -124,4 +151,9 @@ public class ScriptDetectionRadius : MonoBehaviour
     //        }
     //    }
     //}
+
+    void OnDisable()
+    {
+        Debug.Log("detect disabled");
+    }
 }

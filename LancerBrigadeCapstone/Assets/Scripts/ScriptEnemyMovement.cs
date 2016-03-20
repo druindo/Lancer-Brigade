@@ -4,108 +4,141 @@ using System.Collections;
 
 public class ScriptEnemyMovement : MonoBehaviour
 {
+    [Tooltip("The position of this enemy at the beginning of a given lerp.")]
+    public Transform moveStart; //where the enemy starts from
+    [Tooltip("The target point for the lerp end.")]
+    public Transform moveEnd; //where the enemy is going
+    [Tooltip("The position of the targeted player character.")]
+    public Vector3 playerLoc; //where the player is
+    [Tooltip("The speed this enemy moves.")]
+    public float speed = 0.2F; //how fast does the enemy move
 
-    public Transform moveStart;
-    public Transform moveEnd;
-    public Vector3 playerLoc;
-    public float speed = 0.2F;
-    private float startTime;
-    private float journeyLength;
-    public bool isMovementRunning;
-    public bool isLerping = false;
-    Transform targetStart; //previously llama
-    Transform llamatwo;
-    public bool hasRun = true;
-    public bool firstAwake = true;
-    public Transform thisParent;
-    public ScriptDetectionRadius detect;
-    public ScriptEnemyClass eClass;
-    public Vector3 playerExents;
-    public Collider playerCollider;
-    public Vector3 myExtents;
-    public Collider myCollider;
-    public SphereCollider attackSphere;
+    private float startTime; //can be used for lerping //legacy code, remove after release
+    private float journeyLength; //can be used for lerping //legacy code remove after release
+    [Tooltip("Used to check if this script is running.")]
+    public bool isMovementRunning; //check to see if this script is running
 
-    Vector3 startPos;
-    public Vector3 endPos;
-    public float fracJourney = 0f;
-    float distcovered = 0f;
-    public float lerpTime = 1f;
-    public float currentLerpTime;
+    public bool isLerping = false; //check to see if this is lerping //legacy code, remove after release
+    Transform targetStart; //previously llama //legacy code, remove after release
+    Transform llamatwo; //temp variable during testing //legacy code, remove after release
+    [Tooltip("Has this script run at least once since parent instantiation?")]
+    public bool hasRun = true; //has this been run at least once since its parent was instantiated
+    [Tooltip("Has this enemy run it's ScriptDetectionRadius at least once?")]
+    public bool firstAwake = true; //is this the first time scriptdetectionradius has run
+    [Tooltip("This holds a transform that doesn't do anything.")]
+    public Transform thisParent; //this may be of use...someday
+    [Tooltip("This enemy's detection script.")]
+    public ScriptDetectionRadius detect; //reference to detectionradius of this enemy
+    [Tooltip("This enemy's class script.")]
+    public ScriptEnemyClass eClass; //reference to the enemyclass
+    [Tooltip("Vector3; holds data of extents of the playerCollider of the target; see also, size/2.")]
+    public Vector3 playerExents; //the x,y,z vector that goes from the center of the playercollider to a corner; see also, size/2
+    [Tooltip("The targetted player's collider.")]
+    public Collider playerCollider; //the collider of the player
+    [Tooltip("Vector3; holds data of extents of this enemy's collider; see also, size/2.")]
+    public Vector3 myExtents; //the x,y,z vector that goes from the center of the enemy to a corner
+    [Tooltip("This enemy's collider.")]
+    public Collider myCollider; //the collider of this enemy
+    [Tooltip("This enemy's Melee or Ranged radius.")]
+    public SphereCollider attackSphere; //the attack sphere collider; used to determine if this enemy is in attack range
+    [Tooltip("This enemy's rotation script.")]
+    public ScriptEnemyRotation rotate; //the enemy rotation script
 
-    public Ray wallRay;
-    public LayerMask wallMask = 8;
+    [Tooltip("Vector3 form of moveStart.")]
+    Vector3 startPos; //vector form of moveStart
+    [Tooltip("Vector3 form of moveEnd.")]
+    public Vector3 endPos; //vector form of moveEnd
+    [Tooltip("A float used in lerping; represents what % of completion the lerp is. In this case, it is repeatedly reset since the lerp gets reset.")]
+    public float fracJourney = 0f; //used for lerping; represents what % of completion the lerp is
+    [Tooltip("Caution - Float used to represent how much distance has been traveled since the beginning of the lerp.")]
+    float distcovered = 0f; //represents how far since the beginning of the lerp
+    [Tooltip("Caution - Float used for calculating lerp. It's magic.")]
+    public float lerpTime = 1f; //used for calculating the lerp; it's magic
+    [Tooltip("Caution - Float used for calculating lerp. It's magic. Seriously. Lerping is weird.")]
+    public float currentLerpTime; //used for calculating the lerp; it's also magic; seriously, lerping is weird
+
+    [Tooltip("Stores a ray used for detecting walls.")]
+    public Ray wallRay; //stores a ray used for wall detection
+    [Tooltip("Cautino - Stores a layermask for wallRay's cast.")]
+    public LayerMask wallMask = 8; //the wall layermask is stored here...
     void Awake()
     {
-
+        //this did something at one point, but it's job was outsourced
 
     }
 
     void Start()
     {
 
-
-        this.enabled = false;
+        //called at the start of the level
+        this.enabled = false; //disables this script; this one line of code prevents many crashes
     }
 
     // Runs whenever this script becomes enabled; this will only run when the enemy can detect the player, then sets the variables necessary
     void OnEnable()
     {
-        Debug.Log("onenable hasrun" + hasRun);
+        //Debug.Log("onenable hasrun" + hasRun); //this is one of many debugs; 
         //Debug.Log(detect.firstAwake);
-        if (detect.firstAwake)
-            hasRun = false;
-        if (detect.firstAwake != true)
-            hasRun = true;
+        if (detect.firstAwake) //if detect hasn't run it's awake function
+            hasRun = false; //hasRun set to false
+        if (detect.firstAwake != true) //if detect has already run it's awake function
+            hasRun = true; //hasRun set to true
         Debug.Log("llamaduck" + hasRun);
-        if (hasRun)
+        if (hasRun) //if hasRun == (is equal to) true
         {
             //if (firstRun) { thisParent = GetComponentInParent<Transform>(); }
             //else
             Debug.Log("ONEnableHasRun");
-            isMovementRunning = true;
+            isMovementRunning = true; //set variable to true
+            
 
-            eClass = GetComponent<ScriptEnemyClass>();
-            detect = GetComponentInChildren<ScriptDetectionRadius>();
-            playerCollider = detect.colliderHolder;
+            eClass = GetComponent<ScriptEnemyClass>(); //re/assign eClass
+            detect = GetComponentInChildren<ScriptDetectionRadius>(); //re/assign detect; 
+            playerCollider = detect.colliderHolder; //re/assign playerCollider
             //playerCollider = moveEnd.GetComponentInParent<Collider>();
-            moveEnd = playerCollider.transform;
-            playerExents = playerCollider.bounds.extents;
-            myCollider = GetComponentInParent<Collider>();
-            myExtents = myCollider.bounds.extents;
+            moveEnd = playerCollider.transform; //set moveEnd to be equal to the transform of the playerCollider
+            playerExents = playerCollider.bounds.extents; //re/assign playerExtents to extents of its collider's bounding box
+            myCollider = GetComponentInParent<Collider>(); //re/assign myCollider; gets the collider data from gameObject's parent
+            myExtents = myCollider.bounds.extents; //re/assign myExtents; as playerExtents above
             Debug.Log(playerExents + "playerext");
             Debug.Log(myExtents + "enemyextents");
-            Debug.Log(myExtents + playerExents);
-            targetStart = thisParent;
+            Debug.Log(myExtents + playerExents); //these 3 lines output the extents of the player, this enemy, and their combined extents 
+            targetStart = thisParent; //i'm not sure why this is here; legacy code? probably could remove it...
 
 
-            startPos = transform.position;
-            endPos = moveEnd.position - (playerExents + myExtents);
+            startPos = transform.position; //re/assigns startPos to the position of this enemy
+            endPos = moveEnd.position - (playerExents + myExtents); //this calculation is used once; sets endpos to be an offset position of moveEnd.position - the combined extents, thus forming a buffer
             Debug.Log(startPos);
             Debug.Log(endPos);
-            attackSphere = eClass.attackRange;
+            attackSphere = eClass.attackRange; //re/assigns attackSphere from the eClass variable attackRange
             {
-                startTime = Time.time;
+                startTime = Time.time; //re/sets starttime to the system time
                 //set end marker to be a the endpoint of a vector with a set magnitude, but a direction of the player object's transform
-                playerLoc = moveEnd.position;
-                targetStart = moveEnd;
-                playerLoc =
-                playerLoc = Vector3.ClampMagnitude(playerLoc, speed);
+                playerLoc = moveEnd.position; //re/sets playerLoc to moveEnd.position; it's weird but necessary for the math to work
+                targetStart = moveEnd; //re/sets targetStart
+                playerLoc = 
+                playerLoc = Vector3.ClampMagnitude(playerLoc, speed); //re/sets playerLoc to be a vector3 with magnitude clamped at speed
 
                 //llama.position = playerLoc;
 
-                journeyLength = Vector3.Distance(moveStart.position, targetStart.position);
-                isLerping = true;
+                journeyLength = Vector3.Distance(moveStart.position, targetStart.position); //re/sets journey length
+                isLerping = true; //sets isLerping
 
 
 
-                startPos = transform.position;
-                endPos = moveEnd.position - (playerExents + myExtents);
-                if (Mathf.Abs(playerExents.y - myExtents.y) < 1)
-                    endPos.y = this.gameObject.transform.position.y;
+                startPos = transform.position; //re/assigns startpos
+                endPos = moveEnd.position - (playerExents + myExtents); //duplicate of above; no harm done
+                if (Mathf.Abs(playerExents.y - myExtents.y) < 1) //if the absolute value of the difference of the y extents is < 1; is there isn't much of a height difference
+                    endPos.y = this.gameObject.transform.position.y; //sets the y value endPos to be the current y position; this is used for preventing enemies from sinking into hte ground
                 else
-                    endPos.y += playerExents.y - myExtents.y;
+                    endPos.y += playerExents.y - myExtents.y; //otherwise, recalculate endPos.y to be more accurate; note the floating point error
+                speed = eClass.speed;
                 //insert code to set transforms properly?
+                rotate.speed = speed; //re/sets speed of rotation
+                rotate.playerCollider = playerCollider; //re/sets the playerCollider of rotate
+                rotate.detect = detect; //these really just do the same thing for rotate as they do here
+                rotate.enabled = true;
+                rotate.canRotate = true;
             }
 
         }
@@ -121,6 +154,7 @@ public class ScriptEnemyMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Debug.Log("eMove enabled " + enabled);
         if (hasRun)
         {
             //Debug.Log ("islerping" + isLerping);
@@ -160,15 +194,16 @@ public class ScriptEnemyMovement : MonoBehaviour
                                 // Debug.Log("player distance: " + Vector3.Distance(transform.position, moveEnd.position));
                                 // Debug.Log("endpos" + endPos);
                                 //Debug.Log("mathtarget " + (moveEnd.position - (playerExents + myExtents)));
-                                if (endPos != moveEnd.position - (playerExents + myExtents))
+                                if (endPos != moveEnd.GetComponent<Collider>().bounds.ClosestPoint(startPos))
                                 {
                                     //  Debug.Log("reset targeter");
                                     fracJourney = 0;
                                     distcovered = 0;
                                     currentLerpTime = 0; //leave this line out for funky teleports
                                     startPos = transform.position;
-                                    endPos = moveEnd.position - (playerExents + myExtents);
-                                    if (Mathf.Abs(playerExents.y - myExtents.y) < 1)
+                                    //endPos = moveEnd.position - (playerExents + myExtents); //!!!!Try replacing with bounds.closestpoint and mesh.bounds
+                                    endPos = moveEnd.GetComponent<Collider>().bounds.ClosestPoint(startPos);
+                                    if (Mathf.Abs(playerExents.y - myExtents.y) < 3)
                                         endPos.y = this.gameObject.transform.position.y;
                                     else
                                         endPos.y += playerExents.y - myExtents.y;
@@ -289,7 +324,21 @@ public class ScriptEnemyMovement : MonoBehaviour
         else hasRun = true;
        // Debug.Log(hasRun);
     }
+
+    //public IEnumerator EnemyRotation()
+    //{
+    //    Debug.Log("rotatetoface");
+    //    Vector3 blahVect = Vector3.RotateTowards(transform.forward, playerCollider.transform.position - transform.position, speed * Time.deltaTime, 0.0f);
+
+    //    //Vector3.ClampMagnitude(blahVect, detect.detectSphere.radius);
+    //    Debug.DrawRay(transform.position, blahVect, Color.magenta);
+
+    //    transform.GetComponent<Rigidbody>().rotation = Quaternion.LookRotation(blahVect);
+    //    yield return new WaitForSeconds(0); //am i doing this right?
+    //}
 }
+
+
 
 //break down into components to insert into main enemy movement based off of boolean checks? No, can call with another script
 
